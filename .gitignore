@@ -28,3 +28,8 @@ venv
 
 # NodeJS
 node_modules
+
+# NodeRED
+nodered/.config.*
+nodered/flows.json
+nodered/lib

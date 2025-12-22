@@ -1,110 +1,105 @@
-[![Build Stable](https://github.com/frappe/frappe_docker/actions/workflows/build_stable.yml/badge.svg)](https://github.com/frappe/frappe_docker/actions/workflows/build_stable.yml)
-[![Build Develop](https://github.com/frappe/frappe_docker/actions/workflows/build_develop.yml/badge.svg)](https://github.com/frappe/frappe_docker/actions/workflows/build_develop.yml)
+# ERPNext Docker Deployment
 
-Everything about [Frappe](https://github.com/frappe/frappe) and [ERPNext](https://github.com/frappe/erpnext) in containers.
+Custom Docker deployment for ERPNext, including tailored configurations, services, scripts, and environment setup for production and development use.
 
-# Getting Started
+### Links
+- [Frappe Docker Docs](Frappe_Docker.md)
+- [User Manual](User_Manual.md)
 
-**New to Frappe Docker?** Read the [Getting Started Guide](docs/getting-started.md) for a comprehensive overview of repository structure, development workflow, custom apps, Docker concepts, and quick start examples.
+### Launch ERPNext + Frappe
+```bash
+$ docker compose up -d
 
-To get started you need [Docker](https://docs.docker.com/get-docker/), [docker-compose](https://docs.docker.com/compose/), and [git](https://docs.github.com/en/get-started/getting-started-with-git/set-up-git) setup on your machine. For Docker basics and best practices refer to Docker's [documentation](http://docs.docker.com).
-
-Once completed, chose one of the following two sections for next steps.
-
-### Try in Play With Docker
-
-To play in an already set up sandbox, in your browser, click the button below:
-
-<a href="https://labs.play-with-docker.com/?stack=https://raw.githubusercontent.com/frappe/frappe_docker/main/pwd.yml">
-  <img src="https://raw.githubusercontent.com/play-with-docker/stacks/master/assets/images/button.png" alt="Try in PWD"/>
-</a>
-
-### Try on your Dev environment
-
-First clone the repo:
-
-```sh
-git clone https://github.com/frappe/frappe_docker
-cd frappe_docker
+# Verify Deployment
+$ docker ps --format "table {{.Names}}\t{{.Status}}"
+erpnext-docker-frontend-1      Up 4 minutes
+erpnext-docker-scheduler-1     Up 4 minutes
+erpnext-docker-db-1            Up 4 minutes (healthy)
+erpnext-docker-websocket-1     Up 4 minutes
+erpnext-docker-queue-long-1    Up 4 minutes
+erpnext-docker-backend-1       Up 4 minutes
+erpnext-docker-redis-cache-1   Up 4 minutes
+erpnext-docker-queue-short-1   Up 4 minutes
+erpnext-docker-redis-queue-1   Up 4 minutes
 ```
 
-Then run: `docker compose -f pwd.yml up -d`
+### Initial Setup
+- Access ERPNext on http://127.0.0.1:8080/#login
+- Default Username: Administrator
+- Default Password: admin
+- Accounts Passwords can be Changed Later from: http://127.0.0.1:8080/app/user
 
-### To run on ARM64 architecture follow this instructions
+### Connect to ERPNext Database
+```bash
+# docker-compose.yml
+services:
+  db:
+    image: mariadb:10.6
+    networks:
+      - frappe_network
+    ports:
+      - 3306:3306
 
-After you clone the repo and `cd frappe_docker`, run this command to build multi-architecture images specifically for ARM64.
+$ docker compose down
+$ docker compose up -d
+# Now MySQL Database is Accessible on tcp://127.0.0.1:3306
+```
 
-`docker buildx bake --no-cache --set "*.platform=linux/arm64"`
+### ERPNext WebHooks
+A webhook is a way for one application to send data over HTTP
+to another application automatically when a specific event happens.
+- Navigate to `/app/webhook` to Configure ERPNext WebHooks
+- WebHook is Attached to Event on a Certain Database Table for Example `on_update`
 
-and then
+- Request URL: http://<docker_host_bridge_ip>:port/hook_handler
+- Request Method: GET/POST
+- JSON Request Body
+```js
+// Example JSON Request Body DocType: Task
+{
+    "task_id": "{{ doc.name }}",
+    "task_name": "{{ doc.subject }}",
+    "project": "{{ doc.project }}",
+    "status": "{{ doc.status }}"
+}
+```
 
-- add `platform: linux/arm64` to all services in the `pwd.yml`
-- replace the current specified versions of erpnext image on `pwd.yml` with `:latest`
+### NodeRED Setup
+NodeRED is Used as an Automation Layer for ERPNext WebHooks.
+Note That any Custom HTTP Handler can be Used Like Python Fast API for Example.
+```bash
+# Validate Docker Host Bridge
+user@docker-host$ nc -lnvp 16880
+Listening on 0.0.0.0 16880
 
-Then run: `docker compose -f pwd.yml up -d`
+user@docker-host$ docker exec -u root -it erpnext-docker-backend-1 /bin/bash
 
-## Final steps
+root@erpnext-docker-backend-1$ apt upate
+root@erpnext-docker-backend-1$ apt install netcat-openbsd
+root@erpnext-docker-backend-1$ apt install net-tools
 
-Wait for 5 minutes for ERPNext site to be created or check `create-site` container logs before opening browser on port 8080. (username: `Administrator`, password: `admin`)
+root@erpnext-docker-backend-1$ ifconfig 
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 172.19.0.5  netmask 255.255.0.0  broadcast 172.19.255.255
+        ether 02:42:ac:13:00:05  txqueuelen 0  (Ethernet)
+        RX packets 50346  bytes 95210868 (90.8 MiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 56380  bytes 31818822 (30.3 MiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+# Docker Host IP: 172.19.0.1
 
-If you ran in a Dev Docker environment, to view container logs: `docker compose -f pwd.yml logs -f create-site`. Don't worry about some of the initial error messages, some services take a while to become ready, and then they go away.
+root@erpnext-docker-backend-1$ nc 172.19.0.5 16880
+# Connection received on 172.19.0.5 38080 @ docker-host
 
-# Documentation
+# NodeRED Setup
+user@docker-host$ cd nodered
+user@docker-host$ npm install
+user@docker-host$ npx node-red --port 16880 --userDir .
+```
+- NodeRED Dashboard Link: http://127.0.0.1:16880/
 
-### [Getting Started Guide](docs/getting-started.md)
+### Database Modifications - TODO
 
-### [Frequently Asked Questions](https://github.com/frappe/frappe_docker/wiki/Frequently-Asked-Questions)
+### Server Modifications - TODO
 
-### [Getting Started](#getting-started)
-
-- [Quick Start (Linux/Mac)](docs/01-getting-started/01-quick-start-linux-mac.md)
-- [Single Compose Setup](docs/01-getting-started/02-single-compose-setup.md)
-
-### [Setup](#setup)
-
-- [Container Setup Overview](docs/02-setup/01-overview.md)
-- [Build Setup](docs/02-setup/02-build-setup.md)
-- [Start Setup](docs/02-setup/03-start-setup.md)
-- [Environment Variables](docs/02-setup/04-env-variables.md)
-- [Compose Overrides](docs/02-setup/05-overrides.md)
-- [Setup Examples](docs/02-setup/06-setup-examples.md)
-- [Single Server Example](docs/02-setup/07-single-server-example.md)
-
-### [Production](#production)
-
-- [TLS/SSL Setup](docs/03-production/01-tls-ssl-setup.md)
-- [Backup Strategy](docs/03-production/02-backup-strategy.md)
-- [Multi-Tenancy](docs/03-production/03-multi-tenancy.md)
-
-### [Operations](#operations)
-
-- [Site Operations](docs/04-operations/01-site-operations.md)
-
-### [Development](#development)
-
-- [Development Guide](docs/05-development/01-development.md)
-- [Debugging](docs/05-development/02-debugging.md)
-- [Local Services Connection](docs/05-development/03-local-services-connection.md)
-
-### [Migration](#migration)
-
-- [Migrate from Multi-Image Setup](docs/06-migration/01-migrate-from-multi-image-setup.md)
-
-### [Troubleshooting](#troubleshooting)
-
-- [Troubleshoot Guide](docs/07-troubleshooting/01-troubleshoot.md)
-- [Windows Nginx Entrypoint Error](docs/07-troubleshooting/02-windows-nginx-entrypoint-error.md)
-
-### [Reference](#reference)
-
-- [Build Version 10 Images](docs/08-reference/01-build-version-10-images.md)
-
-# Contributing
-
-If you want to contribute to this repo refer to [CONTRIBUTING.md](CONTRIBUTING.md)
-
-This repository is only for container related stuff. You also might want to contribute to:
-
-- [Frappe framework](https://github.com/frappe/frappe#contributing),
-- [ERPNext](https://github.com/frappe/erpnext#contributing),
-- [Frappe Bench](https://github.com/frappe/bench).
+### Client Modifications - TODO

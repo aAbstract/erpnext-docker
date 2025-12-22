@@ -1,0 +1,9 @@
+{
+  "name": "nodered",
+  "version": "1.0.0",
+  "dependencies": {
+    "node-red": "^4.1.2",
+    "node-red-contrib-discord-advanced": "~3.6.0",
+    "node-red-contrib-stackhero-mysql": "~1.0.5"
+  }
+}
