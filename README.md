@@ -5,6 +5,7 @@ Custom Docker deployment for ERPNext, including tailored configurations, service
 ### Links
 - [Frappe Docker Docs](Frappe_Docker.md)
 - [User Manual](User_Manual.md)
+- [Admin Manual](Admin_Manual.md)
 
 ### Launch ERPNext + Frappe
 ```bash
@@ -98,8 +99,31 @@ user@docker-host$ npx node-red --port 16880 --userDir .
 ```
 - NodeRED Dashboard Link: http://127.0.0.1:16880/
 
-### Database Modifications - TODO
+### Custom Configuration
+- Branding
+  - In `/app/website-settings/Website Settings > Home > Login Page`
+  - Add Logo and Company Name
+  - In `/app/website-settings/Website Settings > NavBar > Brand`
+  - Add Content of File `custom/brand.html`
+  - In `/app/navbar-settings/Navbar Settings`
+  - Edit Help Menu
 
-### Server Modifications - TODO
+- Landing Page
+  - In Users Module Go to `Role` List
+  - set `Projects User > Home Page` to `/app/projects`
 
-### Client Modifications - TODO
+- Projects Workspace
+  - Remove all Entries in `/app/workspace/Projects > Dashbaord`
+  - Remove Project, TimeSheet, Billing Summary and Docs Link From `/app/workspace/Projects > Shortcuts`
+  - In `/app/doctype/Project > Customize`
+  - Hide Unwanted Sections
+  - In `/app/property-setter`
+  - Edit Options and Default Values for DocField `Projects > Status`
+  - In `/app/doctype/Task > Customize`
+  - Hide Unwanted Sections
+  - Configure `/app/projects` Workspace UI Layout
+    - Add Total Tasks Shortcut
+    - Add `priority.Medium` Tasks Shortcut
+    - Add `priority.High` Tasks Shortcut
+    - Add `priority.Urgent` Quick List
+  - Run script `custom prj_ws_conf.py`
