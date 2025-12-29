@@ -46,6 +46,50 @@ $ docker compose up -d
 # Now MySQL Database is Accessible on tcp://127.0.0.1:3306
 ```
 
+### Custom Configuration
+- Branding
+  - In `/app/website-settings/Website Settings > Home > Login Page`
+  - Add Logo and Company Name
+  - In `/app/website-settings/Website Settings > NavBar > Brand`
+  - Add Content of File `custom/brand.html`
+  - In `/app/navbar-settings/Navbar Settings`
+  - Edit Help Menu
+
+- Landing Page
+  - In Users Module Go to `Role` List
+  - set `Projects User > Home Page` to `/app/projects`
+
+- Projects Workspace
+  - Remove all Entries in `/app/workspace/Projects > Dashbaord`
+  - Remove Project, TimeSheet, Billing Summary and Docs Link From `/app/workspace/Projects > Shortcuts`
+  - In `/app/doctype/Project > Customize`
+  - Hide Unwanted Sections
+  - In `/app/property-setter`
+  - Edit Options and Default Values for DocField `Projects > Status`
+  - In `/app/doctype/Task > Customize`
+  - Hide Unwanted Sections
+  - Configure `/app/projects` Workspace UI Layout
+    - Add Total Tasks Shortcut
+    - Add `priority.Medium` Tasks Shortcut
+    - Add `priority.High` Tasks Shortcut
+    - Add `priority.Urgent` Quick List
+  - Run script `custom prj_ws_conf.py`
+
+- Create Task Types
+  - Mechanical
+  - Electronics
+  - Electrical
+  - Software
+  - RD
+
+- Admin Only Features
+  - Add Load Distribution Chart to `/app/dashboard-view/Project`
+  - Add Link to `/app/dashboard-view/Project` on Admin Project Home Page
+
+- Team Heads Features
+  - Special Account for Each Head
+  - Special Workspace for Each Head
+
 ### ERPNext WebHooks
 A webhook is a way for one application to send data over HTTP
 to another application automatically when a specific event happens.
@@ -98,32 +142,3 @@ user@docker-host$ npm install
 user@docker-host$ npx node-red --port 16880 --userDir .
 ```
 - NodeRED Dashboard Link: http://127.0.0.1:16880/
-
-### Custom Configuration
-- Branding
-  - In `/app/website-settings/Website Settings > Home > Login Page`
-  - Add Logo and Company Name
-  - In `/app/website-settings/Website Settings > NavBar > Brand`
-  - Add Content of File `custom/brand.html`
-  - In `/app/navbar-settings/Navbar Settings`
-  - Edit Help Menu
-
-- Landing Page
-  - In Users Module Go to `Role` List
-  - set `Projects User > Home Page` to `/app/projects`
-
-- Projects Workspace
-  - Remove all Entries in `/app/workspace/Projects > Dashbaord`
-  - Remove Project, TimeSheet, Billing Summary and Docs Link From `/app/workspace/Projects > Shortcuts`
-  - In `/app/doctype/Project > Customize`
-  - Hide Unwanted Sections
-  - In `/app/property-setter`
-  - Edit Options and Default Values for DocField `Projects > Status`
-  - In `/app/doctype/Task > Customize`
-  - Hide Unwanted Sections
-  - Configure `/app/projects` Workspace UI Layout
-    - Add Total Tasks Shortcut
-    - Add `priority.Medium` Tasks Shortcut
-    - Add `priority.High` Tasks Shortcut
-    - Add `priority.Urgent` Quick List
-  - Run script `custom prj_ws_conf.py`
