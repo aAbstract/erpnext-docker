@@ -6,7 +6,7 @@ variable "REGISTRY_USER" {
 }
 
 variable PYTHON_VERSION {
-    default = "3.12"
+    default = "3.11.6"
 }
 variable NODE_VERSION {
     default = "20.19.2"
