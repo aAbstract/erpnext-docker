@@ -1,20 +1,18 @@
+import os
 import sys
 import json
 import mariadb
+from dotenv import load_dotenv
 
 
 def database_connect() -> mariadb.Connection:
-    DB_HOST = '127.0.0.1'
-    DB_PORT = 3306
-    DB_USER = 'root'
-    DB_PASS = 'admin'
-    MAIN_DB = '_5e5899d8398b5f7b'
+
     db_conn = mariadb.connect(
-        host=DB_HOST,
-        port=DB_PORT,
-        user=DB_USER,
-        password=DB_PASS,
-        database=MAIN_DB,
+        host=os.environ['DB_HOST'],
+        port=int(os.environ['DB_PORT']),
+        user=os.environ['DB_USER'],
+        password=os.environ['DB_PASS'],
+        database=os.environ['MAIN_DB'],
     )
     return db_conn
 
@@ -36,20 +34,23 @@ def post_process_filters(in_filters: str) -> str:
     return out_filters
 
 
-def uconf_total_tasks_shortcut(db_conn: mariadb.Connection):
+def uconf_shortcuts(db_conn: mariadb.Connection, shortcut_label: str, status: str = 'Open', priority: str = None):
     cursor = db_conn.cursor(dictionary=True)
 
-    cursor.execute("SELECT * FROM `tabWorkspace Shortcut` WHERE parent = 'Projects' AND label = 'Total Tasks';")
+    cursor.execute("SELECT * FROM `tabWorkspace Shortcut` WHERE parent = 'Projects' AND label = ?;", (shortcut_label,))
     record = cursor.fetchone()
     if not record:
-        print('Error Can not Find `Total Tasks` Shortcut')
+        print(f'Error Can not Find `{shortcut_label}` Shortcut')
         sys.exit(1)
 
-    stats_filter = assign_to_user_filter() | status_filter('Open')
+    stats_filter = assign_to_user_filter() | status_filter(status)
+    if priority:
+        stats_filter |= priority_filter(priority)
+
     stats_filter = json.dumps(stats_filter)
     stats_filter = post_process_filters(stats_filter)
 
-    cursor.execute("UPDATE `tabWorkspace Shortcut` SET stats_filter = ? WHERE parent = 'Projects' AND label = 'Total Tasks';", (stats_filter,))
+    cursor.execute("UPDATE `tabWorkspace Shortcut` SET stats_filter = ? WHERE parent = 'Projects' AND label = ?;", (stats_filter, shortcut_label))
     db_conn.commit()
     print(f'UPDATE `tabWorkspace Shortcut` Rows Affected: {cursor.rowcount}')
 
@@ -75,9 +76,18 @@ def ufconf_urgent_tasks_quick_list(db_conn: mariadb.Connection):
 def main():
     db_conn = database_connect()
 
-    uconf_total_tasks_shortcut(db_conn)
-    ufconf_urgent_tasks_quick_list(db_conn)
+    uconf_shortcuts(db_conn=db_conn, shortcut_label='Total')
+    uconf_shortcuts(db_conn=db_conn, shortcut_label='Medium', priority='Medium')
+    uconf_shortcuts(db_conn=db_conn, shortcut_label='High', priority='High')
+    uconf_shortcuts(db_conn=db_conn, shortcut_label='Urgent', priority='Urgent')
+
+    uconf_shortcuts(db_conn=db_conn, shortcut_label='Working', status='Working')
+    uconf_shortcuts(db_conn=db_conn, shortcut_label='Pending', status='Pending Review')
+    uconf_shortcuts(db_conn=db_conn, shortcut_label='Overdue', status='Overdue')
+
+    # ufconf_urgent_tasks_quick_list(db_conn)
 
 
 if __name__ == '__main__':
+    load_dotenv('custom/.env')
     main()

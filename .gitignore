@@ -33,3 +33,5 @@ node_modules
 nodered/.config.*
 nodered/flows.json
 nodered/lib
+
+custom/.env
