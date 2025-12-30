@@ -36,3 +36,4 @@ nodered/lib
 
 custom/.env
 custom/*.sql
+custom/Old_Projects.txt
