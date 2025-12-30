@@ -35,3 +35,4 @@ nodered/flows.json
 nodered/lib
 
 custom/.env
+custom/*.sql
